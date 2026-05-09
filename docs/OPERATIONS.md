@@ -53,7 +53,8 @@ VITE_APP_VARIANT=home npm run dev
 このリポジトリは `vercel.json` と `api/dars-evaluate.mjs` により Vercel へ直接デプロイできます。
 
 - フロント: Vite ビルド（静的配信）
-- API: Vercel Functions (`/api/dars-evaluate`)
+- API: Vercel Functions（`api/dars-evaluate.mjs`）— `vercel.json` で `maxDuration` を 60 秒に設定済み
+- **Hobby** プランでは関数の実行時間上限が短いことがあり、Gemini 応答が遅いとタイムアウト（画面では「判定処理に失敗…」）になり得ます。改善しない場合は **Pro** やプラン上限の確認を検討してください。
 
 ### Vercel 側で設定する環境変数
 

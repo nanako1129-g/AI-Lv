@@ -12,6 +12,37 @@ function extractJsonObjectText(raw) {
   return t;
 }
 
+/** @param {unknown} data generateContent のレスポンス */
+function candidatesTextConcat(data) {
+  const cand = data?.candidates?.[0];
+  const parts = cand?.content?.parts;
+  if (!Array.isArray(parts)) return "";
+  return parts.map((p) => (typeof p?.text === "string" ? p.text : "")).join("");
+}
+
+/**
+ * @param {string} text
+ */
+function parseModelJson(text) {
+  const trimmed = extractJsonObjectText(text);
+  try {
+    return JSON.parse(trimmed);
+  } catch {
+    const start = trimmed.indexOf("{");
+    const end = trimmed.lastIndexOf("}");
+    if (start >= 0 && end > start) {
+      try {
+        return JSON.parse(trimmed.slice(start, end + 1));
+      } catch {
+        /* fall through */
+      }
+    }
+    const err = new Error("JSON のパースに失敗しました");
+    err.status = 502;
+    throw err;
+  }
+}
+
 /** @param {string | undefined} model */
 export function resolveGeminiModel(model) {
   const m = String(model || DEFAULT_MODEL).trim();
@@ -62,6 +93,7 @@ async function callGeminiOnceRaw({ apiKey, model, userText, primaryAxis, mergedI
         ],
         generationConfig: {
           temperature: 0.35,
+          maxOutputTokens: 2048,
           responseMimeType: "application/json",
         },
       }
@@ -72,6 +104,7 @@ async function callGeminiOnceRaw({ apiKey, model, userText, primaryAxis, mergedI
         contents: [{ role: "user", parts: [{ text: userBlock }] }],
         generationConfig: {
           temperature: 0.35,
+          maxOutputTokens: 2048,
           responseMimeType: "application/json",
         },
       };
@@ -91,8 +124,7 @@ async function callGeminiOnceRaw({ apiKey, model, userText, primaryAxis, mergedI
     throw err;
   }
 
-  const text =
-    data?.candidates?.[0]?.content?.parts?.find((p) => p.text)?.text ?? "";
+  const text = candidatesTextConcat(data).trim();
   if (!text) {
     const block = data?.candidates?.[0]?.finishReason;
     const err = new Error(
@@ -102,14 +134,7 @@ async function callGeminiOnceRaw({ apiKey, model, userText, primaryAxis, mergedI
     throw err;
   }
 
-  let parsed;
-  try {
-    parsed = JSON.parse(extractJsonObjectText(text));
-  } catch {
-    const err = new Error("JSON のパースに失敗しました");
-    err.status = 502;
-    throw err;
-  }
+  const parsed = parseModelJson(text);
   return normalizeParsedResult(parsed);
 }
 
