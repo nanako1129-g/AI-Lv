@@ -158,21 +158,20 @@ async function callGeminiOnce(p) {
 /**
  * @param {object} p
  * @param {string} p.apiKey
+ * @param {string} p.model
  * @param {string} p.userText
  * @param {string} p.primaryAxis
- * @param {string} [p.model]
  * @param {number} [p.maxAttempts]
  */
-export async function evaluateDarsWithRetry(p) {
+async function attemptsWithBackoffForModel(p) {
   const maxAttempts = p.maxAttempts ?? 5;
-  const model = resolveGeminiModel(p.model);
   let delayMs = 1000;
   let lastErr;
   for (let i = 0; i < maxAttempts; i++) {
     try {
       return await callGeminiOnce({
         apiKey: p.apiKey,
-        model,
+        model: p.model,
         userText: p.userText,
         primaryAxis: p.primaryAxis,
       });
@@ -188,6 +187,34 @@ export async function evaluateDarsWithRetry(p) {
       if (noRetry || i === maxAttempts - 1) break;
       await sleep(delayMs);
       delayMs *= 2;
+    }
+  }
+  throw lastErr;
+}
+
+/**
+ * @param {object} p
+ * @param {string} p.apiKey
+ * @param {string} p.userText
+ * @param {string} p.primaryAxis
+ * @param {string} [p.model]
+ * @param {number} [p.maxAttempts]
+ */
+export async function evaluateDarsWithRetry(p) {
+  const preferred = resolveGeminiModel(p.model);
+  const modelChain = [...new Set([preferred, DEFAULT_MODEL, "gemini-1.5-flash"])];
+
+  let lastErr;
+  for (let m = 0; m < modelChain.length; m++) {
+    const model = modelChain[m];
+    try {
+      return await attemptsWithBackoffForModel({ ...p, model });
+    } catch (e) {
+      lastErr = e;
+      const status = /** @type {{ status?: number }} */ (e).status;
+      if (status === 401 || status === 403 || status === 429) throw e;
+      if (status === 404 && m < modelChain.length - 1) continue;
+      throw e;
     }
   }
   throw lastErr;
