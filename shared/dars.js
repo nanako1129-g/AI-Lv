@@ -69,7 +69,10 @@ export function buildSystemInstruction(primaryAxisLabel) {
 - 文脈から、技術的な工夫（例: プロンプト設計、評価・反復、ツール連携、レビュー文化）、AI の利用範囲・深さ、ビジネスや業務への貢献の度合いを汲み取り、DARS 公開概要に沿ってレベルを推定してください。
 - 入力に無い固有名詞を推測して創作しないでください。説明は一般表現・役割ベースで書いてください。不足があれば clarifyingQuestions で穏やかに確認してください。
 
-日本語で出力し、指定 JSON スキーマのみに従ってください。`;
+日本語で、次のキーだけを持つ単一の JSON オブジェクトとして出力してください（前後に説明文やコードフェンスは付けない）。
+level(number 1〜5), levelName, reason, evidenceBullets(string の配列 2〜4 件),
+clarifyingQuestions(string の配列 最大2), goodPoint, advice, nextAction,
+alternateAxisComment, orgGrowthBridge, companyAlignmentTip`;
 }
 
 /**

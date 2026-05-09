@@ -1,9 +1,4 @@
-import {
-  DEFAULT_MODEL,
-  RESULT_JSON_SCHEMA,
-  buildSystemInstruction,
-  normalizeParsedResult,
-} from "../shared/dars.js";
+import { DEFAULT_MODEL, buildSystemInstruction, normalizeParsedResult } from "../shared/dars.js";
 
 function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms));
@@ -50,7 +45,6 @@ ${userText}
     generationConfig: {
       temperature: 0.35,
       responseMimeType: "application/json",
-      responseJsonSchema: RESULT_JSON_SCHEMA,
     },
   };
 
