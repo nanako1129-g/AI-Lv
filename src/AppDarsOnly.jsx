@@ -90,6 +90,81 @@ function IconMic({ className }) {
   );
 }
 
+/** 個人レベル 1〜5 の位置を視覚化（根拠ブロックの直前に表示） */
+function DarsLevelPositionScale({ level }) {
+  const lv = Math.min(5, Math.max(1, Number(level) || 3));
+  const steps = [1, 2, 3, 4, 5];
+  return (
+    <section
+      className="rounded-xl border border-indigo-100/90 bg-gradient-to-b from-indigo-50/80 to-white p-3 sm:p-5 lg:p-6"
+      aria-label={`個人レベルは Lv.${lv} です（1〜5のスケール上の位置）`}
+    >
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h3 className="text-[0.65rem] font-semibold uppercase tracking-wider text-indigo-700/90">
+          個人レベルの位置（参考）
+        </h3>
+        <p className="hidden text-[0.65rem] font-medium text-slate-500 sm:block lg:text-xs">
+          Lv.1 基礎 → Lv.5 変革のイメージ
+        </p>
+      </div>
+      <p className="mt-2 text-xs leading-relaxed text-slate-600 sm:text-sm">
+        公開概要に沿った参考スケールです。色が濃いところが今回の位置です。上を目指したい・まずは土台づくり、など感覚の目安にどうぞ。
+      </p>
+
+      <div className="mt-3 grid min-w-0 grid-cols-5 gap-0.5 sm:mt-4 sm:gap-2" role="list">
+        {steps.map((n) => (
+          <div key={n} className="flex min-h-[2.75rem] min-w-0 flex-col items-center justify-end sm:min-h-[3.25rem]" role="listitem">
+            {n === lv ? (
+              <div className="mb-0.5 flex flex-col items-center">
+                <span className="rounded-full bg-rose-100 px-1.5 py-0.5 text-[0.55rem] font-bold text-rose-700 shadow-sm sm:px-2 sm:text-[0.65rem]">
+                  ここ💮
+                </span>
+                <span className="select-none text-base leading-none text-indigo-500 sm:text-lg" aria-hidden>
+                  ▼
+                </span>
+              </div>
+            ) : (
+              <span className="mb-1 block h-5 sm:h-7" aria-hidden />
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div className="relative mt-1 grid min-w-0 grid-cols-5 gap-0.5 sm:gap-2">
+        <div
+          className="pointer-events-none absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-slate-200/90"
+          aria-hidden
+        />
+        {steps.map((n) => {
+          const active = n === lv;
+          return (
+            <div key={n} className="relative z-[1] flex flex-col items-center">
+              <div
+                className={`flex h-10 w-full min-w-0 max-w-[4.5rem] flex-col items-center justify-center rounded-lg border-2 text-center shadow-sm transition sm:h-12 sm:rounded-xl ${
+                  active
+                    ? "border-indigo-400 bg-gradient-to-b from-indigo-500 to-violet-600 text-white ring-2 ring-indigo-300/80 ring-offset-1 ring-offset-indigo-50 sm:ring-offset-2 sm:scale-[1.02]"
+                    : "border-slate-200/90 bg-white/95 text-slate-500"
+                }`}
+              >
+                <span className={`text-[0.55rem] font-semibold uppercase tracking-wide sm:text-[0.6rem] ${active ? "text-indigo-100" : "text-slate-400"}`}>
+                  Lv
+                </span>
+                <span className={`font-sans text-base font-bold tabular-nums leading-none sm:text-lg lg:text-xl ${active ? "text-white" : "text-slate-600"}`}>
+                  {n}
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <p className="mt-3 text-center text-[0.7rem] text-slate-500 sm:text-xs">
+        {lv <= 2 ? "まずは習慣化・再現性がカギです。" : lv === 3 ? "あと一歩で応用が広がりそうです。" : "さらに上は設計・波及の領域です。"}
+      </p>
+    </section>
+  );
+}
+
 export default function AppDarsOnly() {
   const [primaryAxis, setPrimaryAxis] = useState("非開発者（ビジネス職など）");
   const [input, setInput] = useState("");
@@ -200,9 +275,9 @@ export default function AppDarsOnly() {
     "w-full appearance-none rounded-xl border border-slate-200/90 bg-white bg-[length:0.875rem] bg-[right_0.75rem_center] bg-no-repeat py-3 pl-3 pr-10 text-sm font-medium text-slate-800 shadow-sm outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/15";
 
   return (
-    <div className="min-h-screen px-4 py-10 pb-32 font-cute">
-      <div className="mx-auto max-w-lg space-y-8">
-        <article className="rounded-2xl border border-slate-200/80 bg-white/85 p-6 shadow-card backdrop-blur-md sm:rounded-3xl sm:p-8">
+    <div className="min-h-screen overflow-x-hidden px-3 py-8 pb-28 font-cute sm:px-6 sm:py-10 sm:pb-32 lg:px-10 lg:py-12">
+      <div className="mx-auto w-full max-w-full space-y-6 sm:max-w-xl sm:space-y-8 lg:max-w-4xl xl:max-w-5xl">
+        <article className="rounded-2xl border border-slate-200/80 bg-white/85 p-4 shadow-card backdrop-blur-md sm:rounded-3xl sm:p-6 lg:p-8">
           <header className="text-center">
             <p className="text-[0.65rem] font-medium uppercase tracking-[0.2em] text-slate-400">
               DARS · unofficial demo
@@ -231,7 +306,7 @@ export default function AppDarsOnly() {
             <p className="mt-5 text-sm font-medium tracking-wide text-slate-600 sm:text-base">
               DeNA「DARS」指標に合わせた自己判定
             </p>
-            <p className="mx-auto mt-2 max-w-sm text-xs leading-relaxed text-slate-500 sm:text-sm">
+            <p className="mx-auto mt-2 max-w-[min(100%,28rem)] text-xs leading-relaxed text-slate-500 sm:text-sm lg:max-w-2xl">
               セキュリティを守りながら、取り組みの輪郭を言語化する
             </p>
           </header>
@@ -405,75 +480,84 @@ export default function AppDarsOnly() {
 
       {result ? (
         <>
-          <article className="space-y-5 rounded-2xl border border-slate-200/80 bg-white/90 p-6 shadow-card backdrop-blur-md sm:rounded-3xl sm:p-8">
+          <article className="space-y-5 rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-card backdrop-blur-md sm:rounded-3xl sm:p-6 lg:space-y-6 lg:p-8">
             <div className="flex items-end justify-between gap-3 border-b border-slate-100 pb-4">
               <h2 className="text-lg font-semibold tracking-tight text-slate-900">結果（参考）</h2>
               <span className="text-[0.65rem] font-medium uppercase tracking-wider text-slate-400">
                 unofficial
               </span>
             </div>
-            <div className="rounded-xl border border-slate-100 bg-gradient-to-br from-slate-50 to-indigo-50/30 p-5">
-              <p className="font-sans text-4xl font-bold tabular-nums tracking-tight text-indigo-600">
+            <div className="rounded-xl border border-slate-100 bg-gradient-to-br from-slate-50 to-indigo-50/30 p-4 sm:p-5 lg:p-6">
+              <p className="font-sans text-3xl font-bold tabular-nums tracking-tight text-indigo-600 sm:text-4xl">
                 Lv.{result.level}
               </p>
-              <p className="mt-1 text-base font-semibold text-slate-900">{result.levelName}</p>
-              <p className="mt-3 text-sm leading-relaxed text-slate-700">{result.reason}</p>
+              <p className="mt-1 text-[0.95rem] font-semibold leading-snug text-slate-900 sm:text-base lg:text-lg">
+                {result.levelName}
+              </p>
+              <p className="mt-3 text-sm leading-relaxed text-slate-700 sm:text-[0.95rem] lg:text-base lg:leading-relaxed">
+                {result.reason}
+              </p>
             </div>
-            <div className="rounded-xl border border-slate-100 bg-white p-4">
+            <DarsLevelPositionScale level={result.level} />
+            <div className="rounded-xl border border-slate-100 bg-white p-4 lg:p-5">
               <h3 className="text-[0.65rem] font-semibold uppercase tracking-wider text-slate-500">
                 根拠
               </h3>
-              <ul className="mt-2 list-inside list-disc space-y-1.5 text-sm leading-relaxed text-slate-700">
+              <ul className="mt-2 list-disc space-y-1.5 pl-4 text-sm leading-relaxed text-slate-700 sm:pl-5">
                 {result.evidenceBullets.map((b, i) => (
-                  <li key={i}>{b}</li>
+                  <li key={i} className="pl-1">
+                    {b}
+                  </li>
                 ))}
               </ul>
             </div>
             {result.clarifyingQuestions.length > 0 ? (
-              <div className="rounded-xl border border-slate-100 bg-white p-4">
+              <div className="rounded-xl border border-slate-100 bg-white p-4 lg:p-5">
                 <h3 className="text-[0.65rem] font-semibold uppercase tracking-wider text-slate-500">
                   確認したいこと（任意）
                 </h3>
-                <ul className="mt-2 list-inside list-decimal space-y-1.5 text-sm leading-relaxed text-slate-700">
+                <ul className="mt-2 list-decimal space-y-1.5 pl-4 text-sm leading-relaxed text-slate-700 sm:pl-5">
                   {result.clarifyingQuestions.map((q, i) => (
-                    <li key={i}>{q}</li>
+                    <li key={i} className="pl-1">
+                      {q}
+                    </li>
                   ))}
                 </ul>
               </div>
             ) : null}
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4 text-sm">
+            <div className="grid gap-3 sm:grid-cols-2 lg:gap-4">
+              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4 text-sm lg:p-5">
                 <span className="text-[0.65rem] font-semibold uppercase tracking-wider text-slate-500">
                   いいところ
                 </span>
                 <p className="mt-2 leading-relaxed text-slate-800">{result.goodPoint}</p>
               </div>
-              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4 text-sm">
+              <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4 text-sm lg:p-5">
                 <span className="text-[0.65rem] font-semibold uppercase tracking-wider text-slate-500">
                   アドバイス
                 </span>
                 <p className="mt-2 leading-relaxed text-slate-800">{result.advice}</p>
               </div>
             </div>
-            <div className="rounded-xl border border-slate-100 bg-white p-4 text-sm">
+            <div className="rounded-xl border border-slate-100 bg-white p-4 text-sm lg:p-5">
               <span className="text-[0.65rem] font-semibold uppercase tracking-wider text-slate-500">
                 次の一歩
               </span>
               <p className="mt-2 leading-relaxed text-slate-800">{result.nextAction}</p>
             </div>
-            <div className="rounded-xl border border-slate-100 bg-white p-4 text-sm">
+            <div className="rounded-xl border border-slate-100 bg-white p-4 text-sm lg:p-5">
               <span className="text-[0.65rem] font-semibold uppercase tracking-wider text-slate-500">
                 もう一方の軸から
               </span>
               <p className="mt-2 leading-relaxed text-slate-800">{result.alternateAxisComment}</p>
             </div>
-            <div className="rounded-xl border border-slate-100 bg-slate-50/40 p-4 text-sm text-slate-700">
+            <div className="rounded-xl border border-slate-100 bg-slate-50/40 p-4 text-sm text-slate-700 lg:p-5">
               <span className="text-[0.65rem] font-semibold uppercase tracking-wider text-slate-500">
                 組織レベル（参考のみ）
               </span>
               <p className="mt-2 leading-relaxed">{result.orgGrowthBridge}</p>
             </div>
-            <div className="rounded-xl border border-indigo-100 bg-indigo-50/30 p-4 text-sm">
+            <div className="rounded-xl border border-indigo-100 bg-indigo-50/30 p-4 text-sm lg:p-5">
               <span className="text-[0.65rem] font-semibold uppercase tracking-wider text-indigo-600/80">
                 公開メッセージに沿った一言
               </span>
@@ -509,6 +593,26 @@ export default function AppDarsOnly() {
             <p className="mt-4 text-4xl font-bold text-indigo-600">Lv.{result.level}</p>
             <p className="text-xl font-semibold text-slate-900">{result.levelName}</p>
             <p className="mt-3 text-sm leading-relaxed">{result.reason}</p>
+            <div className="mt-4 rounded-lg border border-indigo-100 bg-indigo-50/50 p-3">
+              <p className="text-xs font-bold text-indigo-800">個人レベルの位置（参考）</p>
+              <div className="mt-2 flex justify-between gap-1">
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <div
+                    key={n}
+                    className={`flex flex-1 flex-col items-center rounded-md border px-0.5 py-1 text-center text-[0.65rem] font-bold ${
+                      n === result.level
+                        ? "border-indigo-500 bg-indigo-600 text-white"
+                        : "border-slate-200 bg-white text-slate-500"
+                    }`}
+                  >
+                    {n === result.level ? (
+                      <span className="text-[0.55rem] leading-tight text-rose-100">💮</span>
+                    ) : null}
+                    <span>Lv{n}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
             <p className="mt-4 text-sm font-bold">根拠</p>
             <ul className="list-inside list-disc text-sm">
               {result.evidenceBullets.map((b, i) => (

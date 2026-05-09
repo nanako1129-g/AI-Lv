@@ -66,9 +66,10 @@ export function buildSystemInstruction(primaryAxisLabel) {
 
 【読みやすさ・トーン（重要）】
 - 文章は前向きで、次の行動につながるトーンにしてください。ただし褒めすぎ・断定しすぎは避けます。
-- 絵文字は控えめに使います（全体で 0〜2 個まで）。多用しないでください。
-- 絵文字を使う場合は、goodPoint / advice / nextAction のいずれかに限定し、同じ文に連続で入れないでください。
-- evidenceBullets / clarifyingQuestions には絵文字を入れないでください。
+- 絵文字は全体で 3〜8 個程度にし、読み手が少し嬉しくなる程度に散らしてください（連打や過剰装飾は避ける）。
+- levelName の先頭に短い絵文字を1つ、reason の先頭にも短い絵文字を1つ付けてよい（例: 「📈 …」）。
+- goodPoint / advice / nextAction / alternateAxisComment / companyAlignmentTip にも自然に絵文字を混ぜてよい。
+- evidenceBullets と clarifyingQuestions には絵文字を入れないでください。
 
 【匿名化された入力への対応（重要）】
 - ユーザーはセキュリティのため、固有名詞を避け抽象化して書いていることがあります。社名・プロジェクト名・製品名が無いこと自体を減点理由にしないでください。
