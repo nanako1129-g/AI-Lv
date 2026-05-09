@@ -1,15 +1,17 @@
 import { evaluateDarsWithRetry } from "../server/evaluate.mjs";
 import { PRIMARY_AXIS_VALUES } from "../shared/dars.js";
+import { assertPublicOriginAllowsRequest } from "../shared/originGuard.mjs";
 
 const PRIMARY = new Set(PRIMARY_AXIS_VALUES);
 const MAX_TEXT = 12_000;
 const MIN_TEXT = 8;
 
-function assertSameOrigin(req) {
-  const expected = process.env.PUBLIC_ORIGIN?.trim();
-  if (!expected) return true;
-  const origin = req.headers.origin || "";
-  return origin === expected;
+function getRequestHost(req) {
+  const h = req.headers?.host;
+  if (h) return String(h);
+  const xf = req.headers?.["x-forwarded-host"];
+  if (typeof xf === "string" && xf.trim()) return xf.split(",")[0].trim();
+  return "";
 }
 
 export default async function handler(req, res) {
@@ -19,7 +21,11 @@ export default async function handler(req, res) {
   }
 
   try {
-    if (!assertSameOrigin(req)) {
+    const originOk = assertPublicOriginAllowsRequest(process.env.PUBLIC_ORIGIN, {
+      origin: req.headers?.origin,
+      host: getRequestHost(req),
+    });
+    if (!originOk) {
       return res.status(403).json({ ok: false, error: "許可されていないオリジンです。" });
     }
 
@@ -65,9 +71,10 @@ export default async function handler(req, res) {
     if (process.env.LOG_EVAL_ERRORS === "1") {
       console.error("[dars-evaluate]", code, e instanceof Error ? e.message : e);
     }
-    return res.status(code).json({
-      ok: false,
-      error: "判定処理に失敗しました。時間をおいて再度お試しください。",
-    });
+    const msg =
+      code === 429
+        ? "AI サービス側の利用制限に達しました。しばらく時間をおいてから再度お試しください。"
+        : "判定処理に失敗しました。時間をおいて再度お試しください。";
+    return res.status(code).json({ ok: false, error: msg });
   }
 }

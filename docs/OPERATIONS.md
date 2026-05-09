@@ -6,6 +6,8 @@
 
 - `GEMINI_API_KEY`: 必須
 - `PUBLIC_ORIGIN`: 公開時は必須（例: `https://example.com`）
+  - **末尾スラッシュなし**推奨（`https://app.vercel.app`）。付けていても内部で許容されます。
+  - 同一ページからのリクエストで **Origin が送られない** ブラウザ向けに、**Host が一致する場合も許可**しています。
 - `PORT`: 本番の待受ポート
 - `TRUST_PROXY=1`: リバースプロキシ配下で実行する場合
 

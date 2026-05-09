@@ -6,6 +6,7 @@ import express from "express";
 import helmet from "helmet";
 import { evaluateDarsWithRetry } from "./evaluate.mjs";
 import { PRIMARY_AXIS_VALUES } from "../shared/dars.js";
+import { assertPublicOriginAllowsRequest } from "../shared/originGuard.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.join(__dirname, "../.env") });
@@ -45,10 +46,10 @@ function rateLimit(req, res, next) {
 }
 
 function assertSameOrigin(req) {
-  const expected = String(req.app.locals.publicOrigin || "").trim();
-  if (!expected) return true;
-  const origin = req.get("origin") || "";
-  return origin === expected;
+  return assertPublicOriginAllowsRequest(req.app.locals.publicOrigin, {
+    origin: req.get("origin"),
+    host: req.get("host"),
+  });
 }
 
 export function createRuntimeConfig(env = process.env) {
