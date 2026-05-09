@@ -59,6 +59,59 @@ function mapGeminiHttpStatus(resStatus) {
   return 400;
 }
 
+/**
+ * @param {string} apiKey
+ * @returns {Promise<string[]>} models/xxxx 形式の name 一覧
+ */
+async function listGeminiModels(apiKey) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(apiKey)}`;
+  const res = await fetch(url, { signal: AbortSignal.timeout(30_000) });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const err = new Error(data?.error?.message || `models API エラー (${res.status})`);
+    err.status = mapGeminiHttpStatus(res.status);
+    throw err;
+  }
+
+  const rows = Array.isArray(data?.models) ? data.models : [];
+  const names = [];
+  for (const r of rows) {
+    const name = typeof r?.name === "string" ? r.name : "";
+    if (!name.startsWith("models/")) continue;
+    const methods = Array.isArray(r?.supportedGenerationMethods)
+      ? r.supportedGenerationMethods
+      : [];
+    if (methods.length && !methods.includes("generateContent")) continue;
+    names.push(name);
+  }
+  return names;
+}
+
+/**
+ * listModels() の結果から優先順を組む
+ * @param {string[]} names
+ */
+function buildModelOrderFromNames(names) {
+  const slugs = names
+    .map((n) => n.replace(/^models\//, ""))
+    .filter((s) => /^gemini-[0-9a-zA-Z.-]+$/.test(s));
+
+  const priority = [
+    "gemini-2.0-flash",
+    "gemini-1.5-flash",
+    "gemini-2.5-flash",
+    "gemini-2.5-flash-lite",
+  ];
+  const picked = [];
+  for (const p of priority) {
+    if (slugs.includes(p)) picked.push(p);
+  }
+  for (const s of slugs) {
+    if (!picked.includes(s) && s.includes("flash")) picked.push(s);
+  }
+  return picked;
+}
+
 function buildUserPrompt(userText, primaryAxis) {
   return `次の自己申告テキストを、公開情報に基づく DARS 個人レベルの参考目安として評価してください（非公式・推定）。
 
@@ -214,7 +267,27 @@ export async function evaluateDarsWithRetry(p) {
       const status = /** @type {{ status?: number }} */ (e).status;
       if (status === 401 || status === 403 || status === 429) throw e;
       if (status === 404 && m < modelChain.length - 1) continue;
-      throw e;
+      if (status === 404) {
+        try {
+          const dynamic = buildModelOrderFromNames(await listGeminiModels(p.apiKey)).filter(
+            (x) => !modelChain.includes(x)
+          );
+          for (const model2 of dynamic) {
+            try {
+              return await attemptsWithBackoffForModel({ ...p, model: model2, maxAttempts: 2 });
+            } catch (e2) {
+              const s2 = /** @type {{ status?: number }} */ (e2).status;
+              if (s2 === 401 || s2 === 403 || s2 === 429) throw e2;
+              if (s2 !== 404) throw e2;
+              lastErr = e2;
+            }
+          }
+        } catch (lookupErr) {
+          const ls = /** @type {{ status?: number }} */ (lookupErr).status;
+          if (ls === 401 || ls === 403 || ls === 429) throw lookupErr;
+        }
+      }
+      throw lastErr || e;
     }
   }
   throw lastErr;
